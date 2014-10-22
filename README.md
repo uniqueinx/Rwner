@@ -2,7 +2,7 @@ Rwner
 =====
 
 Rwner - open Router Pwner - is a free tool for testing access for open routers- routers with default username &amp; password-
-It's still under developping & testing.
+It's still under developping & testing, not yet released.
 
 Usage
 =====
