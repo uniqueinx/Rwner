@@ -31,24 +31,14 @@ __author__ = 'uniqueix'
 # ===================================================
 
 
-# class for changing text colors just for indications
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-
-
 live_threads = []
 dead_threads = []
-runningThreadsNum = 0
 threads = []
 Lock = threading.Lock()
 vulnerable = []
 liveHosts = []
 thread_limit = 64
+runningThreadsNum = 0
 
 
 def loadFile(file):
@@ -82,20 +72,19 @@ def tryAuthinticate(host, users, wordlist, time_out):
             try:
                 request = requests.get(url_base, timeout=time_out)
                 if request.status_code == 200:
-                    print '%s[+] %s is vulnerable & accessible.\nUser: %s\tpasswd: %s%s' % (
-                        bcolors.OKGREEN, host, user, passwd, bcolors.ENDC)
+                    print Fore.GREEN + '[+] %s is vulnerable & accessible.\nUser: %s\tpasswd: %s' % (host, user, passwd)
                     returnValue = (host, user, passwd)
                     return returnValue
                 elif request.status_code == 401:
-                    print '%s[-] %s Failed to authorise.%s' % (bcolors.FAIL, host, bcolors.ENDC)
+                    print Fore.RED + '[-] %s Failed to authorise.' % host
             except requests.exceptions.Timeout:
-                print 'got timeout exception'
+                print Fore.LIGHTBLACK_EX + '[!] Timeout Exception'
                 pass
             except requests.exceptions.ConnectionError:
-                print 'got connection error'
+                print Fore.LIGHTBLACK_EX + '[!] Connection Error'
                 pass
             except:
-                print 'Got unknown exception!!!'
+                print Fore.LIGHTBLACK_EX + '[!] Unknown Exception!!!'
                 pass
     return
 
@@ -110,7 +99,7 @@ def detecting_live_hosts(ips):
                         run_isAlive(host)
                     else:
                         while len(live_threads) > thread_limit:
-                            print '%s[*] Sleeping for a second :D%s' % (bcolors.OKBLUE, bcolors.ENDC)
+                            # print Fore.CYAN + '[*] Sleeping for a second :D'
                             time.sleep(1)
                     thread_ = threading.Thread(target=run_isAlive, args=(host,))
                     live_threads.append(thread_)
@@ -118,7 +107,7 @@ def detecting_live_hosts(ips):
                     del dead_threads[:]
     for t in live_threads:
         t.join()
-    print "Exiting Detecting live hosts"
+    print Fore.CYAN + "Exiting Detecting live hosts"
 
 
 def generateHostlst(ips):
@@ -152,23 +141,17 @@ class authenticationThread(threading.Thread):
             Lock.acquire()
             vulnerable.append(result)
             Lock.release()
-        # print 'self', self
-        # print len(threads)
-        # print threads
-
         threads.remove(self)
         runningThreadsNum -= 1
-
-        # print len(threads)
 
 
 def run_isAlive(ip):
     try:
         if not isAlive(ip):
-            print '%s[+] %s is Alive.%s' % (bcolors.OKGREEN, ip, bcolors.ENDC)
+            print Fore.GREEN + '[+] %s is Alive.' % ip
             liveHosts.append(ip)
         else:
-            print '%s[-] %s is Dead.%s' % (bcolors.FAIL, ip, bcolors.ENDC)
+            print Fore.RED + '[-] %s is Dead.' % ip
     except:
         raise
     finally:
@@ -185,7 +168,7 @@ def main_thread():
     numOfThreads = 10
     timeOut = 1
     liveHostsfile = 'hosts.txt'
-    wordList = ['admin', 'iadmin']
+    wordList = ['admin']
     users = ['admin']
     ipRanges = ''
     lstOfIps = []
@@ -230,13 +213,12 @@ def main_thread():
     while liveHosts:
         if runningThreadsNum < numOfThreads:
             # print numOfThreads, runningThreadsNum, len(liveHosts)
-            print 'Trying to authenticate ', liveHosts[0]
+            print Fore.CYAN + '[*] Trying to authenticate ', liveHosts[0]
             x = authenticationThread(runningThreadsNum, liveHosts.pop(0), users, wordList, timeOut)
             runningThreadsNum += 1
             threads.append(x)
             x.start()
-            # print 'list', len(liveHosts),'threads', len(threads)
-            # print threads
+
     for thread in threads:
         thread.join()
 
